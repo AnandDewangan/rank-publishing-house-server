@@ -15,7 +15,7 @@
     "Node.js",
     "Express"
   ],
-  "author": "Anand Dewangan",
+  "author": "Your Name",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
