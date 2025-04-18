@@ -5,8 +5,17 @@ import { authorLogin, getAuthorProfile , updateAuthor, getAuthorById, getAuthors
 
 const router = express.Router();
 
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + file.originalname;
+    cb(null, uniqueSuffix);
+  }
+});
 const upload = multer({ storage });
+
 
 router.post("/login", authorLogin);
 router.get("/profile", verifyAuthor, getAuthorProfile);
