@@ -130,15 +130,35 @@ export const getAuthorById = async (req, res) => {
 
 export const updateAuthor = async (req, res) => {
   try {
-    const updatedAuthor = await Author.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!updatedAuthor) {
+    const author = await Author.findById(req.params.id);
+    if (!author) {
       return res.status(404).json({ message: "Author not found" });
     }
+
+    // Handle new image upload
+    let imagePath = author.image_path; // default to existing
+    if (req.file) {
+      // delete old image
+      const oldImagePath = path.join("uploads", author.image_path);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+      imagePath = req.file.filename; // set new image
+    }
+
+    const updatedData = {
+      ...req.body,
+      image_path: imagePath,
+    };
+
+    const updatedAuthor = await Author.findByIdAndUpdate(
+      req.params.id,
+      updatedData,
+      { new: true, runValidators: true }
+    );
+
     res.status(200).json(updatedAuthor);
   } catch (error) {
     res.status(500).json({ message: "Failed to update author", error });
   }
-}; 
+};
