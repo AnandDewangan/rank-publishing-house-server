@@ -136,15 +136,17 @@ export const updateAuthor = async (req, res) => {
     }
 
     // Handle new image upload
-    let imagePath = author.image_path; // default to existing
+    let imagePath = author.image_path;
     if (req.file) {
-      // delete old image
       const oldImagePath = path.join("uploads", author.image_path);
       if (fs.existsSync(oldImagePath)) {
         fs.unlinkSync(oldImagePath);
       }
-      imagePath = req.file.filename; // set new image
+      imagePath = req.file.filename;
     }
+
+    // Debug: Log request body
+    console.log("Updating author with:", req.body);
 
     const updatedData = {
       ...req.body,
@@ -157,8 +159,14 @@ export const updateAuthor = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    if (!updatedAuthor) {
+      return res.status(500).json({ message: "Failed to update author" });
+    }
+
     res.status(200).json(updatedAuthor);
   } catch (error) {
+    console.error("Update Error:", error);
     res.status(500).json({ message: "Failed to update author", error });
   }
 };
+
