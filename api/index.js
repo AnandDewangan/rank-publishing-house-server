@@ -1,7 +1,9 @@
+// index.js (या api/index.js अगर आप Vercel के /api structure में हैं)
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+
 import authorRoutes from "./routes/authorRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
@@ -11,34 +13,39 @@ import transactionRoutes from "./routes/transactionRoutes.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Middlewares
+app.use(cors({
+  origin: "https://www.rankpublishinghouse.online", // या "*" temporarily
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-// Admin routes 
+// Routes
 app.use("/api/admin", adminRoutes);
-
-// Author routes 
 app.use("/api/authors", authorRoutes);
-
-// Book routes 
 app.use("/api/books", bookRoutes);
-
-// Order routes 
 app.use("/api/orders", orderRoutes);
-
-// Transaction routes 
 app.use("/api/transactions", transactionRoutes);
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-  })
-  .catch((err) => console.log(err));
+// MongoDB Connection — यह check करें कि connection repeat ना हो
+let isConnected = false;
 
-// Export the Express app for Vercel to use as a serverless function
-export default (req, res) => {
-  app(req, res);  // This will allow Vercel to handle the request/response
+const connectToMongo = async () => {
+  if (isConnected) return;
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    isConnected = true;
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+  }
 };
+
+// Exporting for Vercel
+export default async function handler(req, res) {
+  await connectToMongo();
+  return app(req, res);
+}
