@@ -1,6 +1,5 @@
 import express from 'express';
 import multer from 'multer';
-import { storage } from "../utils/cloudinary.js";
 import { deleteBook, addBook, getBooks, updateBook, getBookStats, getAuthorBookStats } from '../controllers/bookController.js';
 
 const router = express.Router();
