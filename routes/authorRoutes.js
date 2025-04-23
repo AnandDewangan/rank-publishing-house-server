@@ -23,6 +23,6 @@ router.get("/", getAuthors);
 router.post("/add", upload.single("image_path"), createAuthor); 
 router.delete("/:id", deleteAuthor);
 router.get("/:id", getAuthorById);
-router.put("/update/:id", upload.single('image_path'), updateAuthor);
+router.put("/:id", upload.single('image_path'), updateAuthor);
 
 export default router;
