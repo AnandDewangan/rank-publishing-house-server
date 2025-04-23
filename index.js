@@ -1,4 +1,3 @@
-// index.js (या api/index.js अगर आप Vercel के /api structure में हैं)
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -14,9 +13,9 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
+// Middleware
 app.use(cors({
-  origin: "https://www.rankpublishinghouse.online", // या "*" temporarily
+  origin: "https://www.rankpublishinghouse.online",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
@@ -30,9 +29,8 @@ app.use("/api/books", bookRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 
-// MongoDB Connection — यह check करें कि connection repeat ना हो
+// MongoDB connection
 let isConnected = false;
-
 const connectToMongo = async () => {
   if (isConnected) return;
   try {
@@ -44,8 +42,10 @@ const connectToMongo = async () => {
   }
 };
 
-// Exporting for Vercel
-export default async function handler(req, res) {
-  await connectToMongo();
-  return app(req, res);
-}
+const PORT = process.env.PORT || 3000;
+
+connectToMongo().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+});
