@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import { getAuthors, getAuthorDetails, updateAuthor, adminLogin } from "../controllers/adminController.js"; 
 import { verifyToken } from "../middleware/verifyToken.js";
 import { verifyAdmin } from "../middleware/verifyAdmin.js";
