@@ -20,6 +20,6 @@ router.post("/login", adminLogin);
 
 router.get("/", verifyToken, verifyAdmin, getAuthors);
 router.get("/:id", verifyToken, verifyAdmin, getAuthorDetails); 
-router.put("/update/:id", verifyToken, verifyAdmin, upload.single("image_path"), updateAuthor);
+router.put("/:id", verifyToken, verifyAdmin, upload.single("image_path"), updateAuthor);
 
 export default router;
