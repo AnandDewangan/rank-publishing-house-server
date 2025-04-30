@@ -8,23 +8,11 @@ import moment from "moment";
 export const addBook = async (req, res) => {
   try {
     const {
-      sku,
-      isbn,
-      author,
-      authorId,
-      title,
-      subtitle,
-      size,
-      pages,
-      color,
-      cover,
-      paperMrp,
-      eMrp,
-      hardMrp,
-      rankMrp,
+      sku, isbn, author, authorId,
+      title, subtitle, size, pages,
+      color, cover,
+      paperMrp, eMrp, hardMrp, rankMrp,
     } = req.body;
-    
-    const coverImage = req.file ? req.file.filename : null;
 
     const newBook = new Book({
       sku,
@@ -41,42 +29,31 @@ export const addBook = async (req, res) => {
       eMrp,
       hardMrp,
       rankMrp,
-      cover_image: coverImage,
+      cover_image: req.body.cover_image || null, // comes from cloudinary middleware
+      image_public_id: req.body.image_public_id || null
     });
 
     await newBook.save();
     res.status(201).json({ message: 'Book added successfully', newBook });
+
   } catch (error) {
     res.status(500).json({ message: 'Failed to add book', error });
   }
 };
 
+
 // Controller to update an existing book (including order details)
 export const updateBook = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const {
-      sku,
-      isbn,
-      author,
-      authorId,
-      title,
-      subtitle,
-      size,
-      pages,
-      color,
-      cover,
-      paperMrp,
-      eMrp,
-      hardMrp,
-      rankMrp,
-      orderId,
-      channel,
-      qty,
-      createdAt,
+      sku, isbn, author, authorId,
+      title, subtitle, size, pages,
+      color, cover,
+      paperMrp, eMrp, hardMrp, rankMrp,
+      orderId, channel, qty, createdAt,
+      cover_image, image_public_id // Cloudinary data
     } = req.body;
-
-    const coverImage = req.file ? req.file.filename : null;
 
     const updateData = {
       sku,
@@ -99,9 +76,9 @@ export const updateBook = async (req, res) => {
       createdAt,
     };
 
-    // Only update cover image if a new one was uploaded
-    if (coverImage) {
-      updateData.cover_image = coverImage;
+    if (cover_image && image_public_id) {
+      updateData.cover_image = cover_image;
+      updateData.image_public_id = image_public_id;
     }
 
     const updatedBook = await Book.findByIdAndUpdate(id, updateData, {
@@ -113,11 +90,13 @@ export const updateBook = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Book updated successfully', newBook: updatedBook });
+
   } catch (error) {
     console.error('Error in updateBook:', error);
     res.status(500).json({ message: 'Failed to update book', error });
   }
 };
+
 
 
 export const getBooks = async (req, res) => {

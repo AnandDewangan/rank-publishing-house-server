@@ -39,33 +39,24 @@ export const createAuthor = async (req, res) => {
     const {
       sku, isbn, name, email, password, contact_no, first_book_name,
       account_number, account_holder_name, bank_name, ifsc_code,
-      account_type, upi_id, bio
+      account_type, upi_id, bio, image_path
     } = req.body;
 
-    // ✅ Check for duplicate email
+    // Check for duplicate email, SKU, and ISBN
     const existingEmail = await Author.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
+    if (existingEmail) return res.status(400).json({ message: "Email already exists" });
 
-    // ✅ Check for duplicate SKU
     const existingSku = await Author.findOne({ sku });
-    if (existingSku) {
-      return res.status(400).json({ message: "SKU already exists" });
-    }
+    if (existingSku) return res.status(400).json({ message: "SKU already exists" });
 
-    // ✅ Check for duplicate ISBN
     const existingIsbn = await Author.findOne({ isbn });
-    if (existingIsbn) {
-      return res.status(400).json({ message: "ISBN already exists" });
-    }
+    if (existingIsbn) return res.status(400).json({ message: "ISBN already exists" });
 
-    const imagePath = req.file ? req.file.filename : "";
-
+    // Assuming image_path is the ImageKit URL
     const newAuthor = new Author({
       sku,
       isbn,
-      image_path: imagePath,
+      image_path: image_path || "", // Use the URL from ImageKit
       name,
       email,
       password,
@@ -89,24 +80,20 @@ export const createAuthor = async (req, res) => {
 };
 
 
+
 export const deleteAuthor = async (req, res) => {
   try {
     const author = await Author.findById(req.params.id);
     if (!author) return res.status(404).json({ message: "Author not found" });
 
-    // Delete image
-    const imagePath = path.join("uploads", author.image_path);
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
-
     await Author.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Author and image deleted" });
+    res.status(200).json({ message: "Author deleted" });
 
   } catch (error) {
     res.status(500).json({ message: "Error deleting author", error });
   }
 };
+
 
 export const getAuthors = async (req, res) => {
   try {
@@ -135,27 +122,24 @@ export const updateAuthor = async (req, res) => {
       return res.status(404).json({ message: "Author not found" });
     }
 
-    // Handle new image upload
-    let imagePath = author.image_path;
-    if (req.file) {
-      const oldImagePath = path.join("uploads", author.image_path);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    const { image_path, image_public_id, ...restData } = req.body;
+
+    // If new image uploaded and there's an old one, delete the old one
+    if (image_public_id && image_public_id !== author.image_public_id) {
+      try {
+        await cloudinary.uploader.destroy(author.image_public_id);
+      } catch (deleteErr) {
+        console.error("Failed to delete old image:", deleteErr);
       }
-      imagePath = req.file.filename;
     }
-
-    // Debug: Log request body
-    console.log("Updating author with:", req.body);
-
-    const updatedData = {
-      ...req.body,
-      image_path: imagePath,
-    };
 
     const updatedAuthor = await Author.findByIdAndUpdate(
       req.params.id,
-      updatedData,
+      {
+        ...restData,
+        image_path: image_path || author.image_path,
+        image_public_id: image_public_id || author.image_public_id,
+      },
       { new: true, runValidators: true }
     );
 
@@ -169,4 +153,3 @@ export const updateAuthor = async (req, res) => {
     res.status(500).json({ message: "Failed to update author", error });
   }
 };
-
