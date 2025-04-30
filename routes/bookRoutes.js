@@ -1,28 +1,51 @@
 import express from 'express';
-import multer from 'multer';
-import { deleteBook, addBook, getBooks, updateBook, getBookStats, getAuthorBookStats } from '../controllers/bookController.js';
+import memoryUpload from '../middleware/multer.js';
+import { uploadBookImage } from '../utils/cloudinary.js';
+import {
+  deleteBook,
+  addBook,
+  getBooks,
+  updateBook,
+  getBookStats,
+  getAuthorBookStats
+} from '../controllers/bookController.js';
 
 const router = express.Router();
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  },
+
+// Upload book image + save book in DB
+router.post('/add-book', memoryUpload.single('cover_image'), async (req, res) => {
+  try {
+    const imageRes = await uploadBookImage(req); // upload to cloudinary
+    req.body.cover_image = imageRes.url;
+    req.body.image_public_id = imageRes.public_id;
+
+    // Call the controller manually
+    await addBook(req, res);
+  } catch (err) {
+    res.status(500).json({ error: 'Upload + Book Add failed', details: err.message });
+  }
 });
 
-const upload = multer({ storage });
+// Update book (same logic as add)
+router.put('/update-book/:id', memoryUpload.single('cover_image'), async (req, res) => {
+  try {
+    if (req.file) {
+      const imageRes = await uploadBookImage(req);
+      req.body.cover_image = imageRes.url;
+      req.body.image_public_id = imageRes.public_id;
+    }
+    await updateBook(req, res);
+  } catch (err) {
+    res.status(500).json({ error: 'Update failed', details: err.message });
+  }
+});
 
-// Route to add a book
-router.post('/add-book', upload.single('cover_image'), addBook); 
-// Route to update a book
-router.put('/update-book/:id', upload.single('cover_image'), updateBook); 
-// Route to get all books
+// Upload-only endpoint (optional, not needed now)
+router.post('/upload-image', memoryUpload.single('image'), uploadBookImage);
+
 router.get('/', getBooks);
-
-router.delete('/delete-book/:id', deleteBook); 
-router.get("/stats", getBookStats); 
+router.delete('/delete-book/:id', deleteBook);
+router.get("/stats", getBookStats);
 router.get("/stats/:authorId", getAuthorBookStats);
 
 export default router;
