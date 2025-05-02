@@ -8,10 +8,16 @@ import Transaction from '../models/Daily.js';
 
 const router = express.Router();
 
+// Route to add transaction using controller logic
 router.post('/add', addTransaction);
+
+// Route to get transactions by author ID
 router.get('/by-author/:authorId', getTransactionsByAuthor);
+
+// Route to delete a transaction by ID
 router.delete('/:id', deleteTransaction);
 
+// Route to add a transaction directly (optional fallback or testing purpose)
 router.post('/', async (req, res) => {
   try {
     const newTx = new Transaction(req.body);
@@ -22,7 +28,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all transactions
+// Route to get transactions filtered by month and year
 router.get('/', async (req, res) => {
   const { month, year } = req.query;
   try {
