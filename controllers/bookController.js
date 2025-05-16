@@ -10,7 +10,7 @@ export const addBook = async (req, res) => {
     const {
       sku, isbn, author, authorId,
       title, subtitle, size, pages,
-      color, cover,
+      color, cover, description,
       paperMrp, eMrp, hardMrp, rankMrp,
     } = req.body;
 
@@ -29,7 +29,8 @@ export const addBook = async (req, res) => {
       eMrp,
       hardMrp,
       rankMrp,
-      cover_image: req.body.cover_image || null, // comes from cloudinary middleware
+      cover_image: req.body.cover_image || null,
+      description,
       image_public_id: req.body.image_public_id || null
     });
 
@@ -49,10 +50,10 @@ export const updateBook = async (req, res) => {
     const {
       sku, isbn, author, authorId,
       title, subtitle, size, pages,
-      color, cover,
+      color, cover, description,
       paperMrp, eMrp, hardMrp, rankMrp,
       orderId, channel, qty, createdAt,
-      cover_image, image_public_id // Cloudinary data
+      cover_image, image_public_id
     } = req.body;
 
     const updateData = {
@@ -66,6 +67,7 @@ export const updateBook = async (req, res) => {
       pages,
       color,
       cover,
+      description,
       paperMrp,
       eMrp,
       hardMrp,
@@ -224,3 +226,34 @@ export const getBookStats = async (req, res) => {
     });
   }
 };
+
+export const getBooksAddedThisMonth = async (req, res) => {
+  try {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    const books = await Book.find({
+      createdAt: { $gte: firstDay, $lte: lastDay },
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(books);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch books for current month', details: err.message });
+  }
+};
+
+export const getBookById = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    res.status(200).json(book);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch book", details: err.message });
+  }
+};
+

@@ -12,19 +12,21 @@ export const addOrder = async (req, res) => {
 
     const newOrder = new Order({
       book: bookId,
-      authorId: book.author,
+      authorId: book.authorId, // ✅ Fixed here
       orderId,
       channel,
-      qty,
-      createdAt,
+      qty: Number(qty),
+      createdAt: createdAt ? new Date(createdAt) : new Date(),
     });
 
     await newOrder.save();
     res.status(201).json({ message: "Order added successfully", newOrder });
   } catch (error) {
-    res.status(500).json({ message: "Failed to add order", error });
+    // console.error("❌ Error while adding order:", error);
+    res.status(500).json({ message: "Failed to add order", error: error.message });
   }
 };
+
 
 // Controller to get orders by book ID
 export const getOrdersByBook = async (req, res) => {
@@ -191,5 +193,47 @@ export const getAuthorSales = async (req, res) => {
   } catch (error) {
     console.error("❌ Error fetching monthly sales:", error);
     res.status(500).json({ message: "Failed to fetch monthly sales data." });
+  }
+};
+
+export const getBookOrder = async (req, res) => {
+  try {
+    const bestSelling = await Order.aggregate([
+      {
+        $group: {
+          _id: "$book", // group by book ID
+          totalQty: { $sum: "$qty" } // sum of quantities
+        }
+      },
+      {
+        $sort: { totalQty: -1 } // sort descending by qty
+      },
+      {
+        $limit: 10 // only get the top one
+      },
+      {
+        $lookup: {
+          from: "books", // collection name
+          localField: "_id",
+          foreignField: "_id",
+          as: "book"
+        }
+      },
+      {
+        $unwind: "$book" // unwind the populated book array
+      },
+      {
+        $project: {
+          _id: "$book._id",
+          totalQty: 1,
+          book: 1
+        }
+      }
+    ]);
+
+    res.status(200).json(bestSelling);
+  } catch (error) {
+    console.error("Error fetching best-selling book:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

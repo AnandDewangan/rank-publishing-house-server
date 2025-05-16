@@ -21,6 +21,7 @@ const bookSchema = new mongoose.Schema({
   hardMrp: { type: String },
   rankMrp: { type: String },
   cover_image: { type: String },
+  description: { type: String },
 },
 { timestamps: true });
 
