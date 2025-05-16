@@ -19,23 +19,21 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// Parse allowed origins from .env
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim())
   : [];
 
-// Setup CORS
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like Postman)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error("❌ CORS BLOCKED:", origin);  // For debugging
       callback(new Error("Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  credentials: true,
 }));
 
 // Middleware
