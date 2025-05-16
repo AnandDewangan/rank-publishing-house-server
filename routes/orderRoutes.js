@@ -1,5 +1,5 @@
 import express from 'express';
-import { addOrder, getOrdersByBook, deleteOrder, getBookOrderStats, getMonthlySales, getSalesByAuthor, getAuthorSales } from '../controllers/orderController.js';
+import { addOrder, getOrdersByBook, deleteOrder, getBookOrderStats, getMonthlySales, getSalesByAuthor, getAuthorSales, getBookOrder } from '../controllers/orderController.js';
 
 const router = express.Router();
 
@@ -10,5 +10,6 @@ router.get("/book-orders", getBookOrderStats);
 router.get("/monthly", getMonthlySales);
 router.get("/author-sales/:authorId", getSalesByAuthor);
 router.get("/monthly/:authorId", getAuthorSales);
+router.get("/best-selling", getBookOrder);
 
 export default router;

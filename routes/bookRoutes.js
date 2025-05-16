@@ -7,7 +7,9 @@ import {
   getBooks,
   updateBook,
   getBookStats,
-  getAuthorBookStats
+  getAuthorBookStats,
+  getBooksAddedThisMonth,
+  getBookById 
 } from '../controllers/bookController.js';
 
 const router = express.Router();
@@ -47,5 +49,7 @@ router.get('/', getBooks);
 router.delete('/delete-book/:id', deleteBook);
 router.get("/stats", getBookStats);
 router.get("/stats/:authorId", getAuthorBookStats);
+router.get('/featured-books', getBooksAddedThisMonth);
+router.get('/:id', getBookById);
 
 export default router;
