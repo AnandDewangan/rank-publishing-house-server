@@ -12,6 +12,7 @@ export const addBook = async (req, res) => {
       title, subtitle, size, pages,
       color, cover, description,
       paperMrp, eMrp, hardMrp, rankMrp,
+      cat,
     } = req.body;
 
     const newBook = new Book({
@@ -26,12 +27,15 @@ export const addBook = async (req, res) => {
       color,
       cover,
       paperMrp,
+      rankStoreRoyalty,
       eMrp,
+      eRoyalty,
       hardMrp,
       rankMrp,
       cover_image: req.body.cover_image || null,
       description,
-      image_public_id: req.body.image_public_id || null
+      image_public_id: req.body.image_public_id || null,
+      cat
     });
 
     await newBook.save();
@@ -51,9 +55,9 @@ export const updateBook = async (req, res) => {
       sku, isbn, author, authorId,
       title, subtitle, size, pages,
       color, cover, description,
-      paperMrp, eMrp, hardMrp, rankMrp,
+      paperMrp, rankStoreRoyalty, eMrp, eRoyalty, hardMrp, rankMrp,
       orderId, channel, qty, createdAt,
-      cover_image, image_public_id
+      cover_image, image_public_id, cat
     } = req.body;
 
     const updateData = {
@@ -69,13 +73,16 @@ export const updateBook = async (req, res) => {
       cover,
       description,
       paperMrp,
+      rankStoreRoyalty,
       eMrp,
+      eRoyalty,
       hardMrp,
       rankMrp,
       orderId,
       channel,
       qty,
       createdAt,
+      cat,
     };
 
     if (cover_image && image_public_id) {
@@ -142,42 +149,29 @@ export const getAuthorBookStats = async (req, res) => {
     const books = await Book.find({ authorId: new mongoose.Types.ObjectId(authorId) });
     const totalBooks = books.length;
 
-    // Get all successful transactions for the given author
     const successfulTransactions = await Transaction.find({
       author_id: new mongoose.Types.ObjectId(authorId),
       status: "success",
     });
 
-    // Calculate the total number of successful transactions
     const totalTransactions = successfulTransactions.length;
+    const totalTransactionAmount = successfulTransactions.reduce(
+      (acc, txn) => acc + (txn.amount || 0),
+      0
+    );
 
-    // Calculate the total sum of the amount from successful transactions
-    const totalTransactionAmount = successfulTransactions.reduce((acc, txn) => acc + (txn.amount || 0), 0);
-
-    // Time-based Book Stats
     const now = new Date();
     const lastMonth = new Date(now);
     lastMonth.setMonth(now.getMonth() - 1);
-
     const lastWeek = new Date(now);
     lastWeek.setDate(now.getDate() - 7);
-
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
-    const lastMonthOrders = books.filter(
-      (book) => new Date(book.createdAt) > lastMonth
-    ).length;
+    const lastMonthOrders = books.filter((book) => new Date(book.createdAt) > lastMonth).length;
+    const lastWeekOrders = books.filter((book) => new Date(book.createdAt) > lastWeek).length;
+    const dailyOrders = books.filter((book) => new Date(book.createdAt) > today).length;
 
-    const lastWeekOrders = books.filter(
-      (book) => new Date(book.createdAt) > lastWeek
-    ).length;
-
-    const dailyOrders = books.filter(
-      (book) => new Date(book.createdAt) > today
-    ).length;
-
-    // Sending the response
     res.json({
       totalBooks,
       totalTransactions,
@@ -191,7 +185,7 @@ export const getAuthorBookStats = async (req, res) => {
     console.error("Error fetching stats:", err);
     res.status(500).json({ message: "Server error", error: err });
   }
-}; 
+};
 
 
 export const getBookStats = async (req, res) => {
