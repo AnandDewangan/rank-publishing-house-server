@@ -61,7 +61,7 @@ export const getBookOrderStats = async (req, res) => {
       {
         $group: {
           _id: "$channel",
-          total: { $sum: "$qty" }, // aggregate qty
+          total: { $sum: "$qty" },
         },
       },
     ]);
@@ -71,12 +71,14 @@ export const getBookOrderStats = async (req, res) => {
       total_amazon: 0,
       total_flipkart: 0,
       total_other: 0,
+      total_ebook: 0, // ✅ added
     };
 
     result.forEach((item) => {
-      const channel = item._id.toLowerCase();
+      const channel = item._id?.toLowerCase();
       if (channel === "amazon") stats.total_amazon = item.total;
       else if (channel === "flipkart") stats.total_flipkart = item.total;
+      else if (channel === "e-book") stats.total_ebook = item.total; // ✅ handle E-Book
       else stats.total_other += item.total;
     });
 
@@ -86,6 +88,7 @@ export const getBookOrderStats = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 export const getMonthlySales = async (req, res) => {
   try {
@@ -143,26 +146,57 @@ export const getSalesByAuthor = async (req, res) => {
   try {
     const { authorId } = req.params;
 
-    const books = await Book.find({ authorId: authorId }).select("_id");
+    // Get all books by the author with royalties
+    const books = await Book.find({ authorId }).select("_id eRoyalty rankStoreRoyalty");
+
+    const bookRoyaltyMap = {};
+    books.forEach((book) => {
+      bookRoyaltyMap[book._id.toString()] = {
+        eRoyalty: Number(book.eRoyalty) || 0,
+        rankStoreRoyalty: Number(book.rankStoreRoyalty) || 0,
+      };
+    });
 
     const bookIds = books.map((b) => b._id);
-
     const orders = await Order.find({ book: { $in: bookIds } });
 
-    const total_amazon = orders
-      .filter((o) => o.channel === "Amazon")
-      .reduce((acc, curr) => acc + curr.qty, 0);
+    // Initialize totals
+    let total_amazon = 0;
+    let total_flipkart = 0;
+    let total_other = 0;
+    let total_ebook = 0;
+    let total_paperback = 0;
+    let totalRoyalty = 0;
 
-    const total_flipkart = orders
-      .filter((o) => o.channel === "Flipkart")
-      .reduce((acc, curr) => acc + curr.qty, 0);
+    // Go through each order
+    orders.forEach((order) => {
+      const { channel, book, qty } = order;
+      const bookId = book.toString();
+      const royalty = bookRoyaltyMap[bookId] || { eRoyalty: 0, rankStoreRoyalty: 0 };
 
-    const total_other = orders
-      .filter((o) => o.channel !== "Amazon" && o.channel !== "Flipkart")
-      .reduce((acc, curr) => acc + curr.qty, 0);
+      if (channel === "E-Book") {
+        total_ebook += qty;
+        totalRoyalty += qty * royalty.eRoyalty;
+      } else {
+        if (channel === "Amazon") total_amazon += qty;
+        else if (channel === "Flipkart") total_flipkart += qty;
+        else total_other += qty;
 
-    res.json({ total_amazon, total_flipkart, total_other });
+        total_paperback += qty;
+        totalRoyalty += qty * royalty.rankStoreRoyalty;
+      }
+    });
+
+    res.json({
+      total_amazon,
+      total_flipkart,
+      total_other,
+      total_ebook,
+      total_paperback,
+      totalRoyalty: Math.round(totalRoyalty), // round if needed
+    });
   } catch (error) {
+    console.error("Error in getSalesByAuthor:", error);
     res.status(500).json({ message: "Failed to fetch author sales", error });
   }
 };
