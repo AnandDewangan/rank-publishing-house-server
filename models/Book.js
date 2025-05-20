@@ -16,12 +16,15 @@ const bookSchema = new mongoose.Schema({
   pages: { type: String, required: true },
   color: { type: String, required: true },
   cover: { type: String, required: true },
-  paperMrp: { type: String, required: true },
-  eMrp: { type: String },
+  paperMrp: { type: String, required: true }, 
+  rankStoreRoyalty: { type: String, required: true }, 
+  eMrp: { type: String }, 
+  eRoyalty: { type: String, required: true }, 
   hardMrp: { type: String },
   rankMrp: { type: String },
   cover_image: { type: String },
   description: { type: String },
+  cat: { type: String },
 },
 { timestamps: true });
 
