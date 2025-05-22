@@ -66,19 +66,20 @@ export const getBookOrderStats = async (req, res) => {
       },
     ]);
 
-    // Initialize default values
     const stats = {
       total_amazon: 0,
       total_flipkart: 0,
       total_other: 0,
-      total_ebook: 0, // ✅ added
+      total_ebook: 0,
+      total_rankstore: 0,
     };
 
     result.forEach((item) => {
       const channel = item._id?.toLowerCase();
       if (channel === "amazon") stats.total_amazon = item.total;
       else if (channel === "flipkart") stats.total_flipkart = item.total;
-      else if (channel === "e-book") stats.total_ebook = item.total; // ✅ handle E-Book
+      else if (channel === "e-book") stats.total_ebook = item.total;
+      else if (channel === "rank-store") stats.total_rankstore = item.total;
       else stats.total_other += item.total;
     });
 
@@ -147,13 +148,14 @@ export const getSalesByAuthor = async (req, res) => {
     const { authorId } = req.params;
 
     // Get all books by the author with royalties
-    const books = await Book.find({ authorId }).select("_id eRoyalty rankStoreRoyalty");
+    const books = await Book.find({ authorId }).select("_id eRoyalty rankStoreRoyalty paperBackRoyalty");
 
     const bookRoyaltyMap = {};
     books.forEach((book) => {
       bookRoyaltyMap[book._id.toString()] = {
         eRoyalty: Number(book.eRoyalty) || 0,
         rankStoreRoyalty: Number(book.rankStoreRoyalty) || 0,
+        paperBackRoyalty: Number(book.paperBackRoyalty) || 0,
       };
     });
 
@@ -166,24 +168,30 @@ export const getSalesByAuthor = async (req, res) => {
     let total_other = 0;
     let total_ebook = 0;
     let total_paperback = 0;
+    let total_rankstore = 0;
     let totalRoyalty = 0;
 
     // Go through each order
     orders.forEach((order) => {
       const { channel, book, qty } = order;
       const bookId = book.toString();
-      const royalty = bookRoyaltyMap[bookId] || { eRoyalty: 0, rankStoreRoyalty: 0 };
+      const royalty = bookRoyaltyMap[bookId] || { eRoyalty: 0, rankStoreRoyalty: 0, paperBackRoyalty: 0 };
 
       if (channel === "E-Book") {
         total_ebook += qty;
         totalRoyalty += qty * royalty.eRoyalty;
-      } else {
+      }
+      else if (channel === "Rank-Store"){
+        total_rankstore += qty;
+        totalRoyalty += qty * royalty.rankStoreRoyalty;
+      }
+      else {
         if (channel === "Amazon") total_amazon += qty;
         else if (channel === "Flipkart") total_flipkart += qty;
         else total_other += qty;
 
         total_paperback += qty;
-        totalRoyalty += qty * royalty.rankStoreRoyalty;
+        totalRoyalty += qty * royalty.paperBackRoyalty;
       }
     });
 
@@ -193,7 +201,8 @@ export const getSalesByAuthor = async (req, res) => {
       total_other,
       total_ebook,
       total_paperback,
-      totalRoyalty: Math.round(totalRoyalty), // round if needed
+      total_rankstore,
+      totalRoyalty: Math.round(totalRoyalty), 
     });
   } catch (error) {
     console.error("Error in getSalesByAuthor:", error);
