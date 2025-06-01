@@ -12,6 +12,7 @@ import transactionRoutes from "./routes/transactionRoutes.js";
 import imageRoutes from "./routes/imageRoutes.js";
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import articleRoutes from "./routes/articleRoutes.js";
+import entryRoutes from './routes/entryRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +34,7 @@ app.use(cors({
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 }));
 
 // Middleware
@@ -48,6 +50,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use("/api/articles", articleRoutes);
+app.use('/api/entry', entryRoutes);
 
 // MongoDB connection
 let isConnected = false;
