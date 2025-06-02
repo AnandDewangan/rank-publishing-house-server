@@ -31,7 +31,7 @@ router.get("/check/:rphCode", async (req, res) => {
 // Get next RPH Code
 router.get("/rph-code", async (req, res) => {
   const lastEntry = await Entry.findOne().sort({ rphCode: -1 });
-  const nextCode = lastEntry ? lastEntry.rphCode + 1 : 25411;
+  const nextCode = lastEntry ? lastEntry.rphCode + 1 : 25448;
   res.json({ rphCode: nextCode });
 });
 
