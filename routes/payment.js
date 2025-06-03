@@ -6,8 +6,8 @@ import StoreOrder from "../models/StoreOrder.js";
 const router = express.Router();
 
 const razorpay = new Razorpay({
-  key_id: "rzp_test_opnmIjBt5AXqbR",
-  key_secret: "l5jZYi4Xg6n6G1VlXQikdGov",
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // ✅ Create Razorpay Order
