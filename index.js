@@ -13,6 +13,7 @@ import imageRoutes from "./routes/imageRoutes.js";
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import articleRoutes from "./routes/articleRoutes.js";
 import entryRoutes from './routes/entryRoutes.js';
+import paymentRoutes from "./routes/payment.js";
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +52,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use("/api/articles", articleRoutes);
 app.use('/api/entry', entryRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // MongoDB connection
 let isConnected = false;
