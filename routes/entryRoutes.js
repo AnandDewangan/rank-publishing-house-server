@@ -49,7 +49,7 @@ router.get('/all', async (req, res) => {
 router.post("/create-entry", async (req, res) => {
   try {
     const lastEntry = await Entry.findOne().sort({ rphCode: -1 });
-    const nextCode = lastEntry ? lastEntry.rphCode + 1 : 25411;
+    const nextCode = lastEntry ? lastEntry.rphCode + 1 : 25448;
 
     const newEntry = new Entry({ ...req.body, rphCode: nextCode });
     await newEntry.save();
