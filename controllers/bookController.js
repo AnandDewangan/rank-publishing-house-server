@@ -262,7 +262,11 @@ export const getBookStats = async (req, res) => {
 export const getBooksAddedThisMonth = async (req, res) => {
   try {
     const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // First day of previous month
+    const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    // Last day of current month
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     const books = await Book.find({
@@ -271,12 +275,10 @@ export const getBooksAddedThisMonth = async (req, res) => {
 
     res.status(200).json(books);
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: "Failed to fetch books for current month",
-        details: err.message,
-      });
+    res.status(500).json({
+      error: "Failed to fetch books for the last two months",
+      details: err.message,
+    });
   }
 };
 
