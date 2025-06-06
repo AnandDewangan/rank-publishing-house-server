@@ -14,7 +14,6 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 import articleRoutes from "./routes/articleRoutes.js";
 import entryRoutes from './routes/entryRoutes.js';
 import paymentRoutes from "./routes/payment.js";
-import authRoutes from './routes/authRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 
 // Load environment variables
@@ -56,7 +55,6 @@ app.use("/api/articles", articleRoutes);
 app.use('/api/entry', entryRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use('/api/books', reviewRoutes);
-app.use("/api/auth", authRoutes);
 
 // MongoDB connection
 let isConnected = false;
